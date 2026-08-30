@@ -6,7 +6,7 @@ import { saveToken } from "../auth";
 
 import "../styles/auth.css";
 
-function Login({ onLogin }) {
+function Login({ onLogin, onRegister }) {
   const [username, setUsername] = useState("");
 
   const [password, setPassword] = useState("");
@@ -76,6 +76,13 @@ function Login({ onLogin }) {
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
+        <div className="auth-switch">
+          <span>Don't have an account?</span>
+
+          <button type="button" className="auth-link" onClick={onRegister}>
+            Create account
+          </button>
+        </div>
       </div>
     </div>
   );

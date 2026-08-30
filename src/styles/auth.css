@@ -184,3 +184,28 @@
     padding: 28px 20px;
   }
 }
+
+.auth-switch {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  margin-top: 22px;
+  color: #71717a;
+  font-size: 13px;
+}
+
+.auth-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #18181b;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}

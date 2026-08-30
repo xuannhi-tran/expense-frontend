@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api";
 import ExpenseList from "./ExpenseList";
 import ExpenseForm from "./ExpenseForm";
+import EditExpenseForm from "./EditExpenseForm";
 
 function Dashboard({ onLogout }) {
   const [expenses, setExpenses] = useState([]);
@@ -9,6 +10,7 @@ function Dashboard({ onLogout }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
+  const [editingExpense, setEditingExpense] = useState(null);
 
   const fetchExpenses = async () => {
     try {
@@ -35,12 +37,25 @@ function Dashboard({ onLogout }) {
   const handleLogout = () => {
     // logout
   };
+  // Handle Delete
+  const handleDelete = async (expenseId) => {
+    try {
+      await api.delete(`/expenses/${expenseId}/`);
+
+      setExpenses((currentExpenses) =>
+        currentExpenses.filter((expense) => expense.id !== expenseId)
+      );
+    } catch (error) {
+      console.error(error);
+      setError("Failed to delete expense.");
+    }
+  };
 
   return (
     <div>
       <header>
         <h1>Expense Tracker</h1>
-        <button onClick={handleLogout}>Logout</button>
+        <button onClick={onLogout}>Logout</button>
       </header>
 
       <main>
@@ -75,11 +90,31 @@ function Dashboard({ onLogout }) {
           }}
         />
 
+        {editingExpense && (
+          <EditExpenseForm
+            expense={editingExpense}
+            onExpenseUpdated={(updatedExpense) => {
+              setExpenses((currentExpenses) =>
+                currentExpenses.map((expense) =>
+                  expense.id === updatedExpense.id ? updatedExpense : expense
+                )
+              );
+
+              setEditingExpense(null);
+            }}
+            onCancel={() => setEditingExpense(null)}
+          />
+        )}
+
         {/* EXPENSE LIST */}
         {loading ? (
           <p>Loading expenses...</p>
         ) : (
-          <ExpenseList expenses={expenses} />
+          <ExpenseList
+            expenses={expenses}
+            onEdit={setEditingExpense}
+            onDelete={handleDelete}
+          />
         )}
       </main>
     </div>

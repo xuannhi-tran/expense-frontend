@@ -4,11 +4,11 @@ A full-stack expense tracking application built with React and Django REST Frame
 
 ## Live Demo
 
-[View Live Demo](YOUR_VERCEL_URL)
+[View Live Demo]("https://expense-frontend-tau-eight.vercel.app/")
 
 ## Backend
 
-[Backend Repository](YOUR_BACKEND_REPO_URL)
+[Backend Repository]("https://github.com/xuannhi-tran/expense-api")
 
 ## Features
 

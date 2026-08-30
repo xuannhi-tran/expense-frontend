@@ -11,6 +11,7 @@ import EditExpenseForm from "./EditExpenseForm";
 import "../styles/dashboard.css";
 
 function Dashboard({ onLogout }) {
+  const [allExpenses, setAllExpenses] = useState([]);
   const [expenses, setExpenses] = useState([]);
 
   const [error, setError] = useState("");
@@ -28,14 +29,19 @@ function Dashboard({ onLogout }) {
       setLoading(true);
       setError("");
 
-      const response = await api.get("/expenses/", {
+      // Fetch all expenses for dashboard statistics
+      const allResponse = await api.get("/expenses/");
+
+      // Fetch filtered expenses for search results
+      const filteredResponse = await api.get("/expenses/", {
         params: {
           search: search || undefined,
           category: category || undefined,
         },
       });
 
-      setExpenses(response.data.results);
+      setAllExpenses(allResponse.data.results);
+      setExpenses(filteredResponse.data.results);
     } catch (error) {
       console.error(error);
       setError("Failed to load expenses.");
@@ -53,30 +59,30 @@ function Dashboard({ onLogout }) {
     try {
       await api.delete(`/expenses/${expenseId}/`);
 
-      setExpenses((currentExpenses) =>
-        currentExpenses.filter((expense) => expense.id !== expenseId)
-      );
+      await fetchExpenses();
     } catch (error) {
       console.error(error);
       setError("Failed to delete expense.");
     }
   };
 
-  const totalSpent = expenses.reduce(
+  // Dashboard statistics use ALL expenses,
+  // not the filtered search results.
+  const totalSpent = allExpenses.reduce(
     (total, expense) => total + Number(expense.amount),
     0
   );
 
-  const categoryTotals = expenses.reduce((totals, expense) => {
-    const category = expense.category;
+  const categoryTotals = allExpenses.reduce((totals, expense) => {
+    const expenseCategory = expense.category;
     const amount = Number(expense.amount);
 
-    totals[category] = (totals[category] || 0) + amount;
+    totals[expenseCategory] = (totals[expenseCategory] || 0) + amount;
 
     return totals;
   }, {});
 
-  const expenseCount = expenses.length;
+  const expenseCount = allExpenses.length;
 
   const isFiltering = search || category;
 
@@ -95,11 +101,13 @@ function Dashboard({ onLogout }) {
         <div className="dashboard-summary">
           <div className="summary-card">
             <h3>Total Spent</h3>
+
             <p>${totalSpent.toFixed(2)}</p>
           </div>
 
           <div className="summary-card">
             <h3>Total Expenses</h3>
+
             <p>{expenseCount}</p>
           </div>
         </div>
@@ -109,14 +117,14 @@ function Dashboard({ onLogout }) {
           <h3>Spending by Category</h3>
 
           <div className="category-list">
-            {Object.entries(categoryTotals).map(([category, total]) => {
+            {Object.entries(categoryTotals).map(([expenseCategory, total]) => {
               const percentage =
                 totalSpent > 0 ? (total / totalSpent) * 100 : 0;
 
               return (
-                <div className="category-item" key={category}>
+                <div className="category-item" key={expenseCategory}>
                   <div className="category-header">
-                    <span>{category}</span>
+                    <span>{expenseCategory}</span>
 
                     <span>${total.toFixed(2)}</span>
                   </div>
@@ -160,11 +168,8 @@ function Dashboard({ onLogout }) {
             onChange={(e) => setCategory(e.target.value)}
           >
             <option value="">All Categories</option>
-
             <option value="Food">Food</option>
-
             <option value="Transport">Transport</option>
-
             <option value="Other">Other</option>
           </select>
         </div>
@@ -188,29 +193,24 @@ function Dashboard({ onLogout }) {
 
         {/* Edit Expense */}
         {editingExpense && (
-          <EditExpenseForm
-            expense={editingExpense}
-            onExpenseUpdated={(updatedExpense) => {
-              setExpenses((currentExpenses) =>
-                currentExpenses.map((expense) =>
-                  expense.id === updatedExpense.id ? updatedExpense : expense
-                )
-              );
+          <div className="dashboard-section">
+            <EditExpenseForm
+              expense={editingExpense}
+              onExpenseUpdated={async () => {
+                setEditingExpense(null);
 
-              setEditingExpense(null);
-            }}
-            onCancel={() => setEditingExpense(null)}
-          />
+                await fetchExpenses();
+              }}
+              onCancel={() => setEditingExpense(null)}
+            />
+          </div>
         )}
 
         {/* Add Expense */}
         <div className="dashboard-section">
           <ExpenseForm
-            onExpenseAdded={(newExpense) => {
-              setExpenses((currentExpenses) => [
-                newExpense,
-                ...currentExpenses,
-              ]);
+            onExpenseAdded={async () => {
+              await fetchExpenses();
             }}
           />
         </div>

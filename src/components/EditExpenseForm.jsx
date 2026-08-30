@@ -41,8 +41,8 @@ function EditExpenseForm({ expense, onExpenseUpdated, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Edit Expense</h2>
+    <form className="expense-form" onSubmit={handleSubmit}>
+      <h3>Edit Expense</h3>
 
       <input
         type="text"
@@ -63,12 +63,15 @@ function EditExpenseForm({ expense, onExpenseUpdated, onCancel }) {
         <option value="Other">Other</option>
       </select>
 
-      <button type="submit">Save Changes</button>
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
+      <div className="form-actions">
+        <button type="submit">Save Changes</button>
 
-      {error && <p>{error}</p>}
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+
+      {error && <p className="form-error">{error}</p>}
     </form>
   );
 }

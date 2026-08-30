@@ -1,18 +1,32 @@
 function ExpenseList({ expenses, onEdit, onDelete }) {
   if (expenses.length === 0) {
-    return <p>No expenses found.</p>;
+    return (
+      <div className="state-message">
+        <h4>No expenses found</h4>
+        <p>Add your first expense to start tracking your spending.</p>
+      </div>
+    );
   }
-
   return (
-    <div>
+    <div className="expense-list">
       {expenses.map((expense) => (
-        <div key={expense.id}>
-          <p>{expense.name}</p>
-          <p>${expense.amount}</p>
-          <p>{expense.category}</p>
+        <div className="expense-card" key={expense.id}>
+          <div className="expense-info">
+            <h4>{expense.name}</h4>
+            <span className="expense-category">{expense.category}</span>
+          </div>
 
-          <button onClick={() => onEdit(expense)}>Edit</button>
-          <button onClick={() => onDelete(expense.id)}>Delete</button>
+          <div className="expense-right">
+            <span className="expense-amount">
+              ${Number(expense.amount).toFixed(2)}
+            </span>
+
+            <div className="expense-actions">
+              <button onClick={() => onEdit(expense)}>Edit</button>
+
+              <button onClick={() => onDelete(expense.id)}>Delete</button>
+            </div>
+          </div>
         </div>
       ))}
     </div>

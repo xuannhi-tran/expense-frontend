@@ -45,7 +45,7 @@ function ExpenseForm({ onExpenseAdded }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="expense-form" onSubmit={handleSubmit}>
       <h2>Add Expense</h2>
 
       <input
@@ -64,6 +64,7 @@ function ExpenseForm({ onExpenseAdded }) {
       />
 
       <select value={category} onChange={(e) => setCategory(e.target.value)}>
+        <option value="">Select category</option>
         <option value="Food">Food</option>
         <option value="Transport">Transport</option>
         <option value="Other">Other</option>
@@ -71,7 +72,7 @@ function ExpenseForm({ onExpenseAdded }) {
 
       <button type="submit">Add Expense</button>
 
-      {error && <p>{error}</p>}
+      {error && <p className="form-error">{error}</p>}
     </form>
   );
 }

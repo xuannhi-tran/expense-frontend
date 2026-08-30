@@ -1,19 +1,33 @@
 import { useEffect, useState } from "react";
+
 import api from "../api";
+
 import ExpenseList from "./ExpenseList";
+
 import ExpenseForm from "./ExpenseForm";
+
 import EditExpenseForm from "./EditExpenseForm";
+
+import "../styles/dashboard.css";
 
 function Dashboard({ onLogout }) {
   const [expenses, setExpenses] = useState([]);
+
   const [error, setError] = useState("");
+
   const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
+
   const [category, setCategory] = useState("");
+
   const [editingExpense, setEditingExpense] = useState(null);
 
   const fetchExpenses = async () => {
     try {
+      setLoading(true);
+      setError("");
+
       const response = await api.get("/expenses/", {
         params: {
           search: search || undefined,
@@ -34,9 +48,6 @@ function Dashboard({ onLogout }) {
     fetchExpenses();
   }, [search, category]);
 
-  const handleLogout = () => {
-    // logout
-  };
   // Handle Delete
   const handleDelete = async (expenseId) => {
     try {
@@ -66,54 +77,77 @@ function Dashboard({ onLogout }) {
   }, {});
 
   const expenseCount = expenses.length;
-  const recentExpenses = expenses.slice(0, 5);
+
+  const isFiltering = search || category;
 
   return (
-    <div>
-      <header>
+    <div className="dashboard">
+      <header className="dashboard-header">
         <h1>Expense Tracker</h1>
+
         <button onClick={onLogout}>Logout</button>
       </header>
 
       <main>
         <h2>My Expenses</h2>
-        <div>
-          <h3>Total Spent</h3>
-          <p>${totalSpent.toFixed(2)}</p>
+
+        {/* Summary */}
+        <div className="dashboard-summary">
+          <div className="summary-card">
+            <h3>Total Spent</h3>
+            <p>${totalSpent.toFixed(2)}</p>
+          </div>
+
+          <div className="summary-card">
+            <h3>Total Expenses</h3>
+            <p>{expenseCount}</p>
+          </div>
         </div>
 
-        <div>
-          <h3>Total Expenses</h3>
-          <p>{expenseCount}</p>
-        </div>
-
-        <div>
-          <h3>Recent Expenses</h3>
-
-          {recentExpenses.map((expense) => (
-            <div key={expense.id}>
-              <span>{expense.name} </span>
-              <span>{expense.category} </span>
-              <span>${Number(expense.amount).toFixed(2)}</span>
-            </div>
-          ))}
-        </div>
-
-        <div>
+        {/* Spending by Category */}
+        <div className="dashboard-section">
           <h3>Spending by Category</h3>
 
-          {Object.entries(categoryTotals).map(([category, total]) => (
-            <div key={category}>
-              <span>{category}</span>
-              <span>${total.toFixed(2)}</span>
-            </div>
-          ))}
+          <div className="category-list">
+            {Object.entries(categoryTotals).map(([category, total]) => {
+              const percentage =
+                totalSpent > 0 ? (total / totalSpent) * 100 : 0;
+
+              return (
+                <div className="category-item" key={category}>
+                  <div className="category-header">
+                    <span>{category}</span>
+
+                    <span>${total.toFixed(2)}</span>
+                  </div>
+
+                  <div className="category-bar">
+                    <div
+                      className="category-bar-fill"
+                      style={{
+                        width: `${percentage}%`,
+                      }}
+                    />
+                  </div>
+
+                  <span className="category-percentage">
+                    {percentage.toFixed(0)}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {error && <p>{error}</p>}
+        {/* Error */}
+        {error && (
+          <div className="state-message error-state">
+            <p>{error}</p>
+          </div>
+        )}
 
-        {/* SEARCH + CATEGORY FILTER */}
-        <div>
+        {/* Search + Category Filter */}
+        <div className="dashboard-filters">
           <input
             type="text"
             placeholder="Search expenses..."
@@ -126,19 +160,33 @@ function Dashboard({ onLogout }) {
             onChange={(e) => setCategory(e.target.value)}
           >
             <option value="">All Categories</option>
+
             <option value="Food">Food</option>
+
             <option value="Transport">Transport</option>
+
             <option value="Other">Other</option>
           </select>
         </div>
 
-        {/* ADD EXPENSE */}
-        <ExpenseForm
-          onExpenseAdded={(newExpense) => {
-            setExpenses((currentExpenses) => [newExpense, ...currentExpenses]);
-          }}
-        />
+        {/* Expense Results */}
+        <div className="dashboard-section">
+          <h3>{isFiltering ? "Search Results" : "Recent Expenses"}</h3>
 
+          {loading ? (
+            <div className="state-message">
+              <p>Loading expenses...</p>
+            </div>
+          ) : (
+            <ExpenseList
+              expenses={expenses}
+              onEdit={setEditingExpense}
+              onDelete={handleDelete}
+            />
+          )}
+        </div>
+
+        {/* Edit Expense */}
         {editingExpense && (
           <EditExpenseForm
             expense={editingExpense}
@@ -155,16 +203,17 @@ function Dashboard({ onLogout }) {
           />
         )}
 
-        {/* EXPENSE LIST */}
-        {loading ? (
-          <p>Loading expenses...</p>
-        ) : (
-          <ExpenseList
-            expenses={expenses}
-            onEdit={setEditingExpense}
-            onDelete={handleDelete}
+        {/* Add Expense */}
+        <div className="dashboard-section">
+          <ExpenseForm
+            onExpenseAdded={(newExpense) => {
+              setExpenses((currentExpenses) => [
+                newExpense,
+                ...currentExpenses,
+              ]);
+            }}
           />
-        )}
+        </div>
       </main>
     </div>
   );

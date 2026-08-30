@@ -1,15 +1,25 @@
 import { useState } from "react";
+
 import api from "../api";
+
 import { saveToken } from "../auth";
+
+import "../styles/auth.css";
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
+
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     setError("");
+    setLoading(true);
 
     try {
       const response = await api.post("/api-token-auth/", {
@@ -22,32 +32,51 @@ function Login({ onLogin }) {
     } catch (error) {
       console.error(error);
       setError("Invalid username or password.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h1>Expense Tracker</h1>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-header">
+          <h1>Expense Tracker</h1>
+          <p>Track your spending, simply.</p>
+        </div>
 
-      <form onSubmit={handleLogin}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+        <form className="auth-form" onSubmit={handleLogin}>
+          <div className="form-group">
+            <label htmlFor="username">Username</label>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+            <input
+              id="username"
+              type="text"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          </div>
 
-        <button type="submit">Login</button>
-      </form>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
 
-      {error && <p>{error}</p>}
+            <input
+              id="password"
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          {error && <div className="auth-error">{error}</div>}
+
+          <button className="auth-button" type="submit" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 import ExpenseList from "./ExpenseList";
+import ExpenseForm from "./ExpenseForm";
 
 function Dashboard({ onLogout }) {
   const [expenses, setExpenses] = useState([]);
@@ -17,6 +18,7 @@ function Dashboard({ onLogout }) {
           category: category || undefined,
         },
       });
+
       setExpenses(response.data.results);
     } catch (error) {
       console.error(error);
@@ -30,14 +32,23 @@ function Dashboard({ onLogout }) {
     fetchExpenses();
   }, [search, category]);
 
+  const handleLogout = () => {
+    // logout
+  };
+
   return (
     <div>
       <header>
         <h1>Expense Tracker</h1>
-        <button onClick={onLogout}>Logout</button>
+        <button onClick={handleLogout}>Logout</button>
       </header>
 
       <main>
+        <h2>My Expenses</h2>
+
+        {error && <p>{error}</p>}
+
+        {/* SEARCH + CATEGORY FILTER */}
         <div>
           <input
             type="text"
@@ -56,10 +67,15 @@ function Dashboard({ onLogout }) {
             <option value="Other">Other</option>
           </select>
         </div>
-        <h2>My Expenses</h2>
 
-        {error && <p>{error}</p>}
+        {/* ADD EXPENSE */}
+        <ExpenseForm
+          onExpenseAdded={(newExpense) => {
+            setExpenses((currentExpenses) => [newExpense, ...currentExpenses]);
+          }}
+        />
 
+        {/* EXPENSE LIST */}
         {loading ? (
           <p>Loading expenses...</p>
         ) : (

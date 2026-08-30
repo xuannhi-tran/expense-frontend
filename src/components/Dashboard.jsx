@@ -51,6 +51,23 @@ function Dashboard({ onLogout }) {
     }
   };
 
+  const totalSpent = expenses.reduce(
+    (total, expense) => total + Number(expense.amount),
+    0
+  );
+
+  const categoryTotals = expenses.reduce((totals, expense) => {
+    const category = expense.category;
+    const amount = Number(expense.amount);
+
+    totals[category] = (totals[category] || 0) + amount;
+
+    return totals;
+  }, {});
+
+  const expenseCount = expenses.length;
+  const recentExpenses = expenses.slice(0, 5);
+
   return (
     <div>
       <header>
@@ -60,6 +77,38 @@ function Dashboard({ onLogout }) {
 
       <main>
         <h2>My Expenses</h2>
+        <div>
+          <h3>Total Spent</h3>
+          <p>${totalSpent.toFixed(2)}</p>
+        </div>
+
+        <div>
+          <h3>Total Expenses</h3>
+          <p>{expenseCount}</p>
+        </div>
+
+        <div>
+          <h3>Recent Expenses</h3>
+
+          {recentExpenses.map((expense) => (
+            <div key={expense.id}>
+              <span>{expense.name} </span>
+              <span>{expense.category} </span>
+              <span>${Number(expense.amount).toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <h3>Spending by Category</h3>
+
+          {Object.entries(categoryTotals).map(([category, total]) => (
+            <div key={category}>
+              <span>{category}</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
 
         {error && <p>{error}</p>}
 

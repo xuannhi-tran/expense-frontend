@@ -3,6 +3,7 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import CursorGlow from "./components/CursorGlow";
+import AmbientNetworkAurora from "./components/AmbientNetworkAurora";
 import { isAuthenticated, removeToken } from "./auth";
 
 function App() {
@@ -39,6 +40,7 @@ function App() {
 
   return (
     <>
+      <AmbientNetworkAurora />
       <CursorGlow />
       {renderContent()}
     </>

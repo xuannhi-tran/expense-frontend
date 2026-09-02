@@ -135,12 +135,21 @@ function Dashboard({ onLogout }) {
       {/* Header */}
       <header className="dashboard-header">
         <div className="brand-section">
-          <div className="brand-logo">
-            <Wallet size={22} />
+          <div className="brand-logo-container">
+            <div className="brand-logo-glow" />
+            <div className="brand-logo">
+              <Sparkles size={21} className="brand-icon" />
+            </div>
           </div>
-          <div>
-            <h1 className="brand-title">Expense Tracker</h1>
-            <p className="brand-subtitle">Smart financial management</p>
+          <div className="brand-text-group">
+            <div className="brand-title-row">
+              <h1 className="brand-title">Expense Tracker</h1>
+              <span className="brand-version-badge">Live Hub</span>
+            </div>
+            <div className="brand-status-indicator">
+              <span className="status-dot-ping" />
+              <span className="brand-subtitle">Real-time Financial & Spending Insights</span>
+            </div>
           </div>
         </div>
 

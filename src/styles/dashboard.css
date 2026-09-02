@@ -157,6 +157,19 @@ body {
 }
 
 /* ==========================================================================
+   Ambient Breathing Aurora & Interactive Particle Network
+   ========================================================================== */
+.ambient-network-aurora-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;
+  display: block;
+}
+
+/* ==========================================================================
    Interactive Cursor Glow & Sparkle Animation
    ========================================================================== */
 .cursor-glow-container {
@@ -238,62 +251,170 @@ body {
 }
 
 /* ==========================================================================
-   Header Navigation (Glassmorphic)
+   Header Navigation (Glassmorphic & Polished Branding)
    ========================================================================== */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 32px;
-  padding: 16px 22px;
+  padding: 16px 24px;
   background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-base);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  transition: background-color 0.25s ease, border-color 0.25s ease;
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
 }
 
 .brand-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
 }
 
-.brand-logo {
+/* Glowing Multi-Layer Brand Mark */
+.brand-logo-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
-  color: #ffffff;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
   flex-shrink: 0;
 }
 
+.brand-logo-glow {
+  position: absolute;
+  inset: -3px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc);
+  opacity: 0.55;
+  filter: blur(8px);
+  animation: logoPulse 4s ease-in-out infinite alternate;
+}
+
+.brand-logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.04);
+}
+
 [data-theme="dark"] .brand-logo {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #2563eb 100%);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.brand-icon {
+  color: #67e8f9;
+  filter: drop-shadow(0 0 6px rgba(103, 232, 249, 0.6));
+}
+
+.brand-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .brand-title {
   margin: 0;
   font-size: 20px;
-  font-weight: 750;
-  letter-spacing: -0.4px;
-  color: var(--text-primary);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   white-space: nowrap;
 }
 
+[data-theme="dark"] .brand-title {
+  background: linear-gradient(135deg, #ffffff 0%, #93c5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-version-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+}
+
+[data-theme="dark"] .brand-version-badge {
+  background: rgba(56, 189, 248, 0.15);
+  color: #67e8f9;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.brand-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot-ping {
+  position: relative;
+  display: inline-flex;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #10b981;
+  flex-shrink: 0;
+}
+
+.status-dot-ping::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background-color: #10b981;
+  opacity: 0.6;
+  animation: pingGlow 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes pingGlow {
+  0% { transform: scale(1); opacity: 0.8; }
+  75%, 100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes logoPulse {
+  0% { opacity: 0.35; filter: blur(6px); }
+  100% { opacity: 0.7; filter: blur(10px); }
+}
+
 .brand-subtitle {
-  margin: 2px 0 0;
-  font-size: 12px;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
   color: var(--text-secondary);
   white-space: nowrap;
 }
@@ -309,23 +430,32 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 9px 18px;
+  padding: 10px 18px;
   border: none;
   border-radius: var(--radius-md);
-  background: var(--primary-500);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.18s ease;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.18);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
   white-space: nowrap;
 }
 
+[data-theme="dark"] .btn-header-add {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+
 .btn-header-add:hover {
-  background: var(--primary-600);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.28);
+}
+
+[data-theme="dark"] .btn-header-add:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
 }
 
 .btn-theme-toggle {
@@ -1618,17 +1748,28 @@ body {
     border-radius: var(--radius-md);
   }
 
-  .brand-logo {
+  .brand-logo-container {
     width: 36px;
     height: 36px;
   }
 
-  .brand-title {
-    font-size: 17px;
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
   }
 
-  .brand-subtitle {
-    display: none; /* Hide subtitle on mobile to give room to buttons */
+  .brand-icon {
+    width: 17px;
+    height: 17px;
+  }
+
+  .brand-title {
+    font-size: 16.5px;
+  }
+
+  .brand-status-indicator {
+    display: none; /* Hide status subtitle on mobile to preserve button space */
   }
 
   .btn-header-add {

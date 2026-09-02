@@ -4,6 +4,8 @@ import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
 import CursorGlow from "./components/CursorGlow";
 import AmbientNetworkAurora from "./components/AmbientNetworkAurora";
+import AuthNavbar from "./components/AuthNavbar";
+import AppFooter from "./components/AppFooter";
 import { isAuthenticated, removeToken } from "./auth";
 
 function App() {
@@ -39,11 +41,15 @@ function App() {
   };
 
   return (
-    <>
+    <div className="app-root-layout">
       <AmbientNetworkAurora />
       <CursorGlow />
-      {renderContent()}
-    </>
+      {!loggedIn && <AuthNavbar />}
+      <main className="app-main-viewport">
+        {renderContent()}
+      </main>
+      <AppFooter />
+    </div>
   );
 }
 

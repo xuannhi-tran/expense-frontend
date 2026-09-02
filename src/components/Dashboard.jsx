@@ -3,7 +3,7 @@ import {
   Wallet,
   Receipt,
   TrendingUp,
-  Calculator,
+  Calendar,
   Search,
   Filter,
   Plus,
@@ -229,7 +229,21 @@ function Dashboard({ onLogout }) {
   );
   const topCategory = topCategoryEntry[0];
 
-  const averageExpense = expenseCount > 0 ? totalSpent / expenseCount : 0;
+  // Calculate current calendar month spending in browser local time
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const thisMonthSpent = allExpenses
+    .filter((expense) => {
+      if (!expense?.created_at) return false;
+      const date = new Date(expense.created_at);
+      if (Number.isNaN(date.getTime())) return false;
+      return (
+        date.getMonth() === currentMonth && date.getFullYear() === currentYear
+      );
+    })
+    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
   const isFiltering = Boolean(search || category);
 
@@ -330,11 +344,11 @@ function Dashboard({ onLogout }) {
 
         <div className="metric-card">
           <div className="metric-icon-box avg">
-            <Calculator size={24} />
+            <Calendar size={24} />
           </div>
           <div className="metric-content">
-            <span className="metric-label">Average Cost</span>
-            <span className="metric-value">${averageExpense.toFixed(2)}</span>
+            <span className="metric-label">This Month</span>
+            <span className="metric-value">${thisMonthSpent.toFixed(2)}</span>
           </div>
         </div>
       </section>
@@ -343,10 +357,8 @@ function Dashboard({ onLogout }) {
       <main className="dashboard-grid">
         {/* Left Column: Charts, Search/Filter & Expense List */}
         <div className="grid-main-content">
-          {/* Expense Activity Curve (Only shown when data exists) */}
-          {allExpenses.length > 0 && (
-            <SpendingTrendChart allExpenses={allExpenses} />
-          )}
+          {/* Spending Over Time Chart */}
+          <SpendingTrendChart allExpenses={allExpenses} />
 
           {/* Search & Category Filter */}
           <div className="search-filter-card">
@@ -430,7 +442,7 @@ function Dashboard({ onLogout }) {
           </div>
         </div>
 
-        {/* Right Column: Category Breakdown (Cleanly aligned at top) */}
+        {/* Right Column: Category Breakdown */}
         <aside className="grid-sidebar">
           {/* Spending by Category Card (with Donut Chart) */}
           <div className="card">

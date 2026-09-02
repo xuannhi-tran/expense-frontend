@@ -24,6 +24,39 @@ import { getCategoryIcon } from "../utils/categories";
 import { getInitialTheme, applyTheme } from "../utils/theme";
 import "../styles/dashboard.css";
 
+/**
+ * fetchAllExpenses
+ * Iterates through all paginated backend pages to retrieve the complete unfiltered
+ * expense dataset for overall dashboard KPIs, charts, and breakdown summaries.
+ */
+async function fetchAllExpenses() {
+  let all = [];
+  let currentPage = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await api.get("/expenses/", {
+      params: { page: currentPage },
+    });
+
+    if (Array.isArray(response.data)) {
+      all = response.data;
+      hasMore = false;
+    } else if (response.data && Array.isArray(response.data.results)) {
+      all.push(...response.data.results);
+      if (response.data.next) {
+        currentPage += 1;
+      } else {
+        hasMore = false;
+      }
+    } else {
+      hasMore = false;
+    }
+  }
+
+  return all;
+}
+
 function Dashboard({ onLogout }) {
   const [theme, setTheme] = useState(getInitialTheme);
   const [allExpenses, setAllExpenses] = useState([]);
@@ -54,15 +87,23 @@ function Dashboard({ onLogout }) {
     setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
   };
 
-  const fetchExpenses = useCallback(async () => {
+  // 1. Fetch complete analytics dataset across all backend pages
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const all = await fetchAllExpenses();
+      setAllExpenses(all);
+    } catch (err) {
+      console.error("Failed to load overall analytics dataset:", err);
+      setError("Failed to load spending overview. Please check your connection.");
+    }
+  }, []);
+
+  // 2. Fetch paginated/filtered transactions for the list view only
+  const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
 
-      // 1. Fetch overall expenses for dashboard metrics & charts (always unfiltered summary)
-      const allResponse = await api.get("/expenses/");
-
-      // 2. Fetch paginated filtered expenses for transaction list
       const filteredResponse = await api.get("/expenses/", {
         params: {
           search: search || undefined,
@@ -71,19 +112,11 @@ function Dashboard({ onLogout }) {
         },
       });
 
-      // Handle all expenses (summary metrics)
-      if (allResponse.data && allResponse.data.results) {
-        setAllExpenses(allResponse.data.results);
-      } else if (Array.isArray(allResponse.data)) {
-        setAllExpenses(allResponse.data);
-      } else {
-        setAllExpenses([]);
-      }
-
-      // Handle filtered paginated response
-      if (filteredResponse.data && filteredResponse.data.results) {
+      if (filteredResponse.data && Array.isArray(filteredResponse.data.results)) {
         setExpenses(filteredResponse.data.results);
-        setTotalFilteredCount(filteredResponse.data.count || filteredResponse.data.results.length);
+        setTotalFilteredCount(
+          filteredResponse.data.count ?? filteredResponse.data.results.length
+        );
         setHasNextPage(Boolean(filteredResponse.data.next));
         setHasPrevPage(Boolean(filteredResponse.data.previous));
       } else if (Array.isArray(filteredResponse.data)) {
@@ -98,16 +131,27 @@ function Dashboard({ onLogout }) {
         setHasPrevPage(false);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load transactions:", err);
       setError("Failed to load expenses. Please check your connection.");
     } finally {
       setLoading(false);
     }
   }, [search, category, page]);
 
+  // Initial load: fetch overall analytics once
   useEffect(() => {
-    fetchExpenses();
-  }, [fetchExpenses]);
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  // Transaction list load: triggers on filter / search / page changes
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
+
+  // Combined refresh after CRUD operations
+  const refreshAll = useCallback(async () => {
+    await Promise.all([fetchAnalytics(), fetchTransactions()]);
+  }, [fetchAnalytics, fetchTransactions]);
 
   // Open Drawer in Add mode
   const handleOpenAddDrawer = () => {
@@ -138,7 +182,7 @@ function Dashboard({ onLogout }) {
       setIsDeleting(true);
       await api.delete(`/expenses/${expenseId}/`);
       setDeleteModalExpense(null);
-      await fetchExpenses();
+      await refreshAll();
     } catch (err) {
       console.error(err);
       setError("Failed to delete expense. Please try again.");
@@ -163,7 +207,7 @@ function Dashboard({ onLogout }) {
     setPage((prev) => prev + 1);
   };
 
-  // Dashboard statistics calculations derived strictly from allExpenses (never mutated by filters)
+  // Dashboard statistics calculations derived strictly from allExpenses (never mutated by filters or pagination)
   const totalSpent = allExpenses.reduce(
     (total, expense) => total + Number(expense.amount || 0),
     0
@@ -252,7 +296,7 @@ function Dashboard({ onLogout }) {
         </div>
       )}
 
-      {/* 4-Card Overview Stats (Derived from all user expenses) */}
+      {/* 4-Card Overview Stats (Derived from all user expenses across all pages) */}
       <section className="dashboard-metrics" aria-label="Spending Summary Cards">
         <div className="metric-card">
           <div className="metric-icon-box total">
@@ -378,6 +422,7 @@ function Dashboard({ onLogout }) {
                   onClearFilters={() => {
                     setSearch("");
                     setCategory("");
+                    setPage(1);
                   }}
                 />
               )}
@@ -462,9 +507,7 @@ function Dashboard({ onLogout }) {
         isOpen={isDrawerOpen}
         expense={drawerExpense}
         onClose={handleCloseDrawer}
-        onSuccess={async () => {
-          await fetchExpenses();
-        }}
+        onSuccess={refreshAll}
       />
 
       {/* Custom Destructive Delete Confirmation Modal */}

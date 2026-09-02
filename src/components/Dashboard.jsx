@@ -28,6 +28,10 @@ function Dashboard({ onLogout }) {
   const [theme, setTheme] = useState(getInitialTheme);
   const [allExpenses, setAllExpenses] = useState([]);
   const [expenses, setExpenses] = useState([]);
+  const [totalFilteredCount, setTotalFilteredCount] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPrevPage, setHasPrevPage] = useState(false);
+  const [page, setPage] = useState(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -55,26 +59,51 @@ function Dashboard({ onLogout }) {
       setLoading(true);
       setError("");
 
-      // Fetch all expenses for dashboard statistics
+      // 1. Fetch overall expenses for dashboard metrics & charts (always unfiltered summary)
       const allResponse = await api.get("/expenses/");
 
-      // Fetch filtered expenses for search/category results
+      // 2. Fetch paginated filtered expenses for transaction list
       const filteredResponse = await api.get("/expenses/", {
         params: {
           search: search || undefined,
           category: category || undefined,
+          page: page > 1 ? page : undefined,
         },
       });
 
-      setAllExpenses(allResponse.data.results || allResponse.data || []);
-      setExpenses(filteredResponse.data.results || filteredResponse.data || []);
+      // Handle all expenses (summary metrics)
+      if (allResponse.data && allResponse.data.results) {
+        setAllExpenses(allResponse.data.results);
+      } else if (Array.isArray(allResponse.data)) {
+        setAllExpenses(allResponse.data);
+      } else {
+        setAllExpenses([]);
+      }
+
+      // Handle filtered paginated response
+      if (filteredResponse.data && filteredResponse.data.results) {
+        setExpenses(filteredResponse.data.results);
+        setTotalFilteredCount(filteredResponse.data.count || filteredResponse.data.results.length);
+        setHasNextPage(Boolean(filteredResponse.data.next));
+        setHasPrevPage(Boolean(filteredResponse.data.previous));
+      } else if (Array.isArray(filteredResponse.data)) {
+        setExpenses(filteredResponse.data);
+        setTotalFilteredCount(filteredResponse.data.length);
+        setHasNextPage(false);
+        setHasPrevPage(false);
+      } else {
+        setExpenses([]);
+        setTotalFilteredCount(0);
+        setHasNextPage(false);
+        setHasPrevPage(false);
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to load expenses. Please check your connection.");
     } finally {
       setLoading(false);
     }
-  }, [search, category]);
+  }, [search, category, page]);
 
   useEffect(() => {
     fetchExpenses();
@@ -125,7 +154,16 @@ function Dashboard({ onLogout }) {
     }
   };
 
-  // Dashboard statistics calculations derived from allExpenses
+  // Pagination navigation handlers
+  const handlePrevPage = () => {
+    setPage((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleNextPage = () => {
+    setPage((prev) => prev + 1);
+  };
+
+  // Dashboard statistics calculations derived strictly from allExpenses (never mutated by filters)
   const totalSpent = allExpenses.reduce(
     (total, expense) => total + Number(expense.amount || 0),
     0
@@ -214,7 +252,7 @@ function Dashboard({ onLogout }) {
         </div>
       )}
 
-      {/* 4-Card Overview Stats (Truthfully derived from all user expenses) */}
+      {/* 4-Card Overview Stats (Derived from all user expenses) */}
       <section className="dashboard-metrics" aria-label="Spending Summary Cards">
         <div className="metric-card">
           <div className="metric-icon-box total">
@@ -261,7 +299,7 @@ function Dashboard({ onLogout }) {
       <main className="dashboard-grid">
         {/* Left Column: Charts, Search/Filter & Expense List */}
         <div className="grid-main-content">
-          {/* Spending Trend Analytics Chart (Only shown when data exists) */}
+          {/* Expense Activity Curve (Only shown when data exists) */}
           {allExpenses.length > 0 && (
             <SpendingTrendChart allExpenses={allExpenses} />
           )}
@@ -275,7 +313,10 @@ function Dashboard({ onLogout }) {
                 type="text"
                 placeholder="Search expenses by title..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 aria-label="Search expenses by title"
               />
             </div>
@@ -285,7 +326,10 @@ function Dashboard({ onLogout }) {
               <select
                 id="category-select"
                 value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  setPage(1);
+                }}
                 aria-label="Filter expenses by category"
               >
                 <option value="">All Categories</option>
@@ -307,7 +351,7 @@ function Dashboard({ onLogout }) {
                 <span>{isFiltering ? "Filtered Expenses" : "Recent Transactions"}</span>
               </h2>
               <span className="card-badge">
-                {expenses.length} {expenses.length === 1 ? "entry" : "entries"}
+                {totalFilteredCount} {totalFilteredCount === 1 ? "entry" : "entries"}
               </span>
             </div>
 
@@ -322,6 +366,12 @@ function Dashboard({ onLogout }) {
                 <ExpenseList
                   expenses={expenses}
                   allExpensesCount={allExpenses.length}
+                  totalFilteredCount={totalFilteredCount}
+                  page={page}
+                  hasPrevPage={hasPrevPage}
+                  hasNextPage={hasNextPage}
+                  onPrevPage={handlePrevPage}
+                  onNextPage={handleNextPage}
                   onEdit={handleOpenEditDrawer}
                   onRequestDelete={handleRequestDelete}
                   onOpenAdd={handleOpenAddDrawer}
@@ -335,27 +385,8 @@ function Dashboard({ onLogout }) {
           </div>
         </div>
 
-        {/* Right Column: Quick Action Banner & Category Breakdown */}
+        {/* Right Column: Category Breakdown (Cleanly aligned at top) */}
         <aside className="grid-sidebar">
-          {/* Quick Action / Summary Banner */}
-          <div className="sidebar-summary-card">
-            <h3 className="sidebar-summary-title">
-              <Sparkles size={18} />
-              <span>Quick Actions</span>
-            </h3>
-            <p style={{ margin: "0 0 16px", fontSize: 13, opacity: 0.85, lineHeight: 1.4 }}>
-              Record a new purchase or update your spending log in seconds.
-            </p>
-            <button
-              type="button"
-              className="sidebar-summary-btn"
-              onClick={handleOpenAddDrawer}
-            >
-              <Plus size={17} />
-              <span>Add New Expense</span>
-            </button>
-          </div>
-
           {/* Spending by Category Card (with Donut Chart) */}
           <div className="card">
             <div className="card-header">
@@ -367,7 +398,12 @@ function Dashboard({ onLogout }) {
             <div className="card-body">
               {Object.keys(categoryTotals).length === 0 ? (
                 <div className="empty-state-box" style={{ padding: "24px 16px" }}>
-                  <p className="empty-state-desc">No category data yet.</p>
+                  <h4 className="empty-state-title" style={{ fontSize: 15, marginBottom: 4 }}>
+                    No spending data yet
+                  </h4>
+                  <p className="empty-state-desc">
+                    Add an expense to see your category breakdown.
+                  </p>
                 </div>
               ) : (
                 <>

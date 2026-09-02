@@ -1,32 +1,6 @@
 import { useState } from "react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { getCategoryColor } from "../utils/categories";
-
-function CustomDonutTooltip({ active, payload }) {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="chart-tooltip">
-        <div className="chart-tooltip-header">
-          <span
-            className="chart-tooltip-dot"
-            style={{ backgroundColor: data.color }}
-          />
-          <span className="chart-tooltip-title">{data.name}</span>
-        </div>
-        <div className="chart-tooltip-body">
-          <span className="chart-tooltip-amount">
-            ${Number(data.value).toFixed(2)}
-          </span>
-          <span className="chart-tooltip-pct">
-            ({data.percentage.toFixed(1)}%)
-          </span>
-        </div>
-      </div>
-    );
-  }
-  return null;
-}
 
 function CategoryDonutChart({ categoryTotals, totalSpent }) {
   const [activeIndex, setActiveIndex] = useState(null);
@@ -52,20 +26,19 @@ function CategoryDonutChart({ categoryTotals, totalSpent }) {
   return (
     <div className="donut-chart-container">
       <div className="donut-chart-wrapper">
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={210}>
           <PieChart>
-            <Tooltip content={<CustomDonutTooltip />} />
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={58}
-              outerRadius={82}
+              innerRadius={60}
+              outerRadius={84}
               paddingAngle={3}
               dataKey="value"
               onMouseEnter={(_, index) => setActiveIndex(index)}
               onMouseLeave={() => setActiveIndex(null)}
-              animationDuration={800}
+              animationDuration={600}
             >
               {data.map((entry, index) => (
                 <Cell
@@ -75,10 +48,12 @@ function CategoryDonutChart({ categoryTotals, totalSpent }) {
                   style={{
                     filter:
                       activeIndex === index
-                        ? "drop-shadow(0 4px 6px rgba(0,0,0,0.15))"
+                        ? "drop-shadow(0 4px 10px rgba(0,0,0,0.35))"
                         : "none",
                     cursor: "pointer",
-                    transition: "all 0.2s ease",
+                    transform: activeIndex === index ? "scale(1.04)" : "scale(1)",
+                    transformOrigin: "center center",
+                    transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 />
               ))}
@@ -86,20 +61,31 @@ function CategoryDonutChart({ categoryTotals, totalSpent }) {
           </PieChart>
         </ResponsiveContainer>
 
-        {/* Center Donut Label */}
+        {/* Dynamic Center Donut Readout */}
         <div className="donut-center-label">
           {activeItem ? (
             <>
-              <span className="donut-center-sub">{activeItem.name}</span>
+              <span
+                className="donut-center-sub"
+                style={{ color: activeItem.color, fontWeight: 700 }}
+              >
+                {activeItem.name}
+              </span>
               <span className="donut-center-main">
-                ${activeItem.value.toFixed(0)}
+                ${activeItem.value.toFixed(2)}
+              </span>
+              <span className="donut-center-pct">
+                {activeItem.percentage.toFixed(1)}% of total
               </span>
             </>
           ) : (
             <>
-              <span className="donut-center-sub">Total</span>
+              <span className="donut-center-sub">Total Spent</span>
               <span className="donut-center-main">
-                ${totalSpent.toFixed(0)}
+                ${totalSpent.toFixed(2)}
+              </span>
+              <span className="donut-center-pct">
+                {data.length} {data.length === 1 ? "category" : "categories"}
               </span>
             </>
           )}

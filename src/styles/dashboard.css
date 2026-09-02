@@ -852,21 +852,36 @@ body {
   justify-content: center;
   pointer-events: none;
   user-select: none;
+  text-align: center;
+  width: 110px;
 }
 
 .donut-center-sub {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.3px;
   color: var(--text-muted);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
 }
 
 .donut-center-main {
-  font-size: 20px;
-  font-weight: 800;
+  font-size: 18.5px;
+  font-weight: 850;
   color: var(--text-primary);
   letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin: 2px 0 1px;
+}
+
+.donut-center-pct {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  opacity: 0.85;
 }
 
 /* Recharts Custom Tooltip */
@@ -2118,140 +2133,83 @@ body {
   color: #34d399;
 }
 
-.footer-right {
+/* ==========================================================================
+   Transaction List Pagination
+   ========================================================================== */
+.expense-list-container {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 16px;
 }
 
-.footer-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 550;
-  transition: color 0.15s ease;
-  cursor: pointer;
-}
-
-.footer-link:hover {
-  color: var(--primary-accent, #2563eb);
-  text-decoration: underline;
-}
-
-.footer-link-icon {
-  color: #10b981;
-}
-
-/* ==========================================================================
-   Footer Legal & Info Modal
-   ========================================================================== */
-.footer-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: modalFadeIn 0.2s ease-out;
-}
-
-.footer-modal-card {
-  width: 100%;
-  max-width: 520px;
-  background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border-base);
-  border-radius: 18px;
-  box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.35);
-  overflow: hidden;
-  animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.footer-modal-header {
+.pagination-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 22px;
-  border-bottom: 1px solid var(--border-base);
-}
-
-.footer-modal-header h3 {
-  margin: 0;
-  font-size: 17px;
-  font-weight: 750;
-  color: var(--text-primary);
-}
-
-.footer-modal-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: none;
-  background: var(--bg-card-subtle, rgba(241, 245, 249, 0.8));
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.footer-modal-close:hover {
-  background: var(--bg-hover);
-  color: var(--text-primary);
-}
-
-.footer-modal-body {
-  padding: 20px 22px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--text-secondary);
-}
-
-.footer-modal-body p {
-  margin: 0 0 12px;
-}
-
-.footer-modal-body ul {
-  margin: 0;
-  padding-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.footer-modal-body li strong {
-  color: var(--text-primary);
-}
-
-.footer-modal-footer {
-  padding: 14px 22px;
+  padding: 14px 16px 4px;
   border-top: 1px solid var(--border-base);
-  display: flex;
-  justify-content: flex-end;
+  margin-top: 8px;
 }
 
-.btn-modal-done {
-  padding: 8px 18px;
-  border: none;
-  border-radius: 10px;
-  background: var(--primary-accent, #2563eb);
-  color: #ffffff;
-  font-size: 13.5px;
+.pagination-indicator {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.btn-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border-base);
+  background: var(--bg-card-subtle);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  min-height: 36px;
 }
 
-.btn-modal-done:hover {
-  opacity: 0.9;
+.btn-pagination:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--primary-accent, #2563eb);
+  color: var(--primary-accent, #2563eb);
+}
+
+.btn-pagination:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: transparent;
+}
+
+.footer-code-icon {
+  color: var(--primary-accent, #38bdf8);
+}
+
+.footer-github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-base);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.footer-github-link:hover {
+  border-color: var(--primary-accent, #2563eb);
+  color: var(--primary-accent, #2563eb);
+  text-decoration: none;
 }
 
 @keyframes modalFadeIn {

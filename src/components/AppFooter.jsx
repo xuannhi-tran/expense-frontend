@@ -1,124 +1,47 @@
-import { useState } from "react";
-import { ShieldCheck, X } from "lucide-react";
+import { Code2, ExternalLink } from "lucide-react";
 
 function AppFooter() {
-  const [modalContent, setModalContent] = useState(null); // 'privacy' | 'terms' | 'security' | null
-
-  const openModal = (type, e) => {
-    e.preventDefault();
-    setModalContent(type);
-  };
-
-  const closeModal = () => {
-    setModalContent(null);
-  };
-
   return (
-    <>
-      <footer className="global-app-footer">
-        <div className="footer-inner">
-          {/* Left: Copyright & Tagline */}
-          <div className="footer-left">
-            <span className="footer-copyright">
-              © {new Date().getFullYear()} <strong>Expense Tracker</strong>. All rights reserved.
-            </span>
-            <span className="footer-divider">•</span>
-            <span className="footer-craft">
-              Built with precision &amp; modern web standards.
-            </span>
-          </div>
-
-          {/* Right: Essential Legal & Info Links */}
-          <div className="footer-right">
-            <a href="#privacy" className="footer-link" onClick={(e) => openModal("privacy", e)}>
-              Privacy Policy
-            </a>
-            <a href="#terms" className="footer-link" onClick={(e) => openModal("terms", e)}>
-              Terms of Service
-            </a>
-            <a href="#security" className="footer-link" onClick={(e) => openModal("security", e)}>
-              <ShieldCheck size={14} className="footer-link-icon" />
-              Security
-            </a>
-          </div>
+    <footer className="global-app-footer">
+      <div className="footer-inner">
+        {/* Left: Tech Stack Attribution */}
+        <div className="footer-left">
+          <Code2 size={15} className="footer-code-icon" />
+          <span className="footer-craft">
+            Built with <strong>React</strong>, <strong>Django REST Framework</strong> &amp; <strong>PostgreSQL</strong>
+          </span>
         </div>
-      </footer>
 
-      {/* Interactive Information Modal for Footer Links */}
-      {modalContent && (
-        <div className="footer-modal-overlay" onClick={closeModal}>
-          <div
-            className="footer-modal-card"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
+        {/* Right: Repository Link */}
+        <div className="footer-right">
+          <a
+            href="https://github.com/xuannhi-tran/expense-frontend"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-link footer-github-link"
+            aria-label="View source code on GitHub"
           >
-            <div className="footer-modal-header">
-              <h3>
-                {modalContent === "privacy" && "Privacy & Data Protection"}
-                {modalContent === "terms" && "Terms of Service"}
-                {modalContent === "security" && "Security & Architecture"}
-              </h3>
-              <button
-                type="button"
-                className="footer-modal-close"
-                onClick={closeModal}
-                title="Close modal"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="footer-modal-body">
-              {modalContent === "privacy" && (
-                <>
-                  <p>
-                    Expense Tracker protects your account data with user-specific isolation and token-based authentication.
-                  </p>
-                  <ul>
-                    <li><strong>No Third-Party Sharing:</strong> We do not sell or share your transactional data.</li>
-                    <li><strong>Token Authentication:</strong> Authenticated sessions use secure bearer tokens for API requests.</li>
-                    <li><strong>Account Isolation:</strong> Expenses are strictly mapped and isolated to your authenticated user account.</li>
-                  </ul>
-                </>
-              )}
-
-              {modalContent === "terms" && (
-                <>
-                  <p>
-                    By using Expense Tracker, you agree to responsible usage and management of your spending logs.
-                  </p>
-                  <ul>
-                    <li><strong>Personal Use:</strong> Provisioned for individual expense tracking and spending analytics.</li>
-                    <li><strong>Data Accuracy:</strong> Metrics and charts are computed directly from entries you record.</li>
-                    <li><strong>Account Security:</strong> You are responsible for safeguarding your login credentials.</li>
-                  </ul>
-                </>
-              )}
-
-              {modalContent === "security" && (
-                <>
-                  <p>
-                    Expense Tracker is built on a clean full-stack architecture with standard REST API security practices.
-                  </p>
-                  <ul>
-                    <li><strong>Token-Based Auth:</strong> Session authorization is verified via Django REST Framework token authentication.</li>
-                    <li><strong>User-Specific Queries:</strong> Database queries are scoped strictly to the authenticated user ID.</li>
-                    <li><strong>Secure Communication:</strong> Client and server communicate over encrypted HTTP endpoints.</li>
-                  </ul>
-                </>
-              )}
-            </div>
-
-            <div className="footer-modal-footer">
-              <button type="button" className="btn-modal-done" onClick={closeModal}>
-                Got it
-              </button>
-            </div>
-          </div>
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="footer-link-icon"
+              aria-hidden="true"
+            >
+              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+              <path d="M9 18c-4.51 2-5-2-7-2" />
+            </svg>
+            <span>View on GitHub</span>
+            <ExternalLink size={12} style={{ opacity: 0.7 }} />
+          </a>
         </div>
-      )}
-    </>
+      </div>
+    </footer>
   );
 }
 

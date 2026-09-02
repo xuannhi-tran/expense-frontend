@@ -47,14 +47,24 @@ function AppFooter() {
       {/* Interactive Information Modal for Footer Links */}
       {modalContent && (
         <div className="footer-modal-overlay" onClick={closeModal}>
-          <div className="footer-modal-card" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="footer-modal-card"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+          >
             <div className="footer-modal-header">
               <h3>
                 {modalContent === "privacy" && "Privacy & Data Protection"}
                 {modalContent === "terms" && "Terms of Service"}
-                {modalContent === "security" && "Security & Infrastructure"}
+                {modalContent === "security" && "Security & Architecture"}
               </h3>
-              <button type="button" className="footer-modal-close" onClick={closeModal}>
+              <button
+                type="button"
+                className="footer-modal-close"
+                onClick={closeModal}
+                title="Close modal"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -63,12 +73,12 @@ function AppFooter() {
               {modalContent === "privacy" && (
                 <>
                   <p>
-                    Your privacy is our utmost priority. Expense Tracker enforces a strict zero-knowledge data policy for personal financial figures.
+                    Expense Tracker protects your account data with user-specific isolation and token-based authentication.
                   </p>
                   <ul>
-                    <li><strong>No Third-Party Tracking:</strong> We never sell, monetize, or share your transactional data.</li>
-                    <li><strong>Encrypted Tokens:</strong> All authentication sessions use secure, encrypted bearer tokens.</li>
-                    <li><strong>Data Portability:</strong> You can export or delete your full expense history at any time.</li>
+                    <li><strong>No Third-Party Sharing:</strong> We do not sell or share your transactional data.</li>
+                    <li><strong>Token Authentication:</strong> Authenticated sessions use secure bearer tokens for API requests.</li>
+                    <li><strong>Account Isolation:</strong> Expenses are strictly mapped and isolated to your authenticated user account.</li>
                   </ul>
                 </>
               )}
@@ -76,12 +86,12 @@ function AppFooter() {
               {modalContent === "terms" && (
                 <>
                   <p>
-                    By using Expense Tracker, you agree to responsible financial logging and adherence to our service guidelines.
+                    By using Expense Tracker, you agree to responsible usage and management of your spending logs.
                   </p>
                   <ul>
-                    <li><strong>Personal Use:</strong> Free tier is provisioned for individual financial management and budgeting.</li>
-                    <li><strong>Data Accuracy:</strong> Figures displayed in analytics are generated from user-provided entries.</li>
-                    <li><strong>Availability:</strong> We strive for 99.9% uptime with high-performance edge caching.</li>
+                    <li><strong>Personal Use:</strong> Provisioned for individual expense tracking and spending analytics.</li>
+                    <li><strong>Data Accuracy:</strong> Metrics and charts are computed directly from entries you record.</li>
+                    <li><strong>Account Security:</strong> You are responsible for safeguarding your login credentials.</li>
                   </ul>
                 </>
               )}
@@ -89,12 +99,12 @@ function AppFooter() {
               {modalContent === "security" && (
                 <>
                   <p>
-                    Expense Tracker implements multi-layered security controls to keep your accounts protected.
+                    Expense Tracker is built on a clean full-stack architecture with standard REST API security practices.
                   </p>
                   <ul>
-                    <li><strong>TLS 1.3 / SSL Encryption:</strong> All client-to-server traffic is end-to-end encrypted.</li>
-                    <li><strong>Session Protection:</strong> Automatic token timeout and authorization sanitization.</li>
-                    <li><strong>Isolated Sandboxing:</strong> Clean separation between client rendering and backend APIs.</li>
+                    <li><strong>Token-Based Auth:</strong> Session authorization is verified via Django REST Framework token authentication.</li>
+                    <li><strong>User-Specific Queries:</strong> Database queries are scoped strictly to the authenticated user ID.</li>
+                    <li><strong>Secure Communication:</strong> Client and server communicate over encrypted HTTP endpoints.</li>
                   </ul>
                 </>
               )}

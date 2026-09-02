@@ -33,12 +33,12 @@ function Register({ onRegister, onBackToLogin }) {
       });
 
       onRegister();
-    } catch (error) {
-      console.error(error);
-      if (error.response?.data?.error) {
-        setError(error.response.data.error);
+    } catch (err) {
+      console.error(err);
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
       } else {
-        setError("Failed to create account.");
+        setError("Failed to create account. Username may already be taken.");
       }
     } finally {
       setLoading(false);
@@ -53,30 +53,30 @@ function Register({ onRegister, onBackToLogin }) {
           <div className="auth-brand-badge">
             <div className="auth-brand-logo-glow" />
             <div className="auth-brand-logo">
-              <Sparkles size={22} className="auth-brand-icon" />
+              <Sparkles size={20} className="auth-brand-icon" />
             </div>
             <span className="auth-brand-name">Expense Tracker</span>
-            <span className="auth-brand-tag">Live Hub</span>
+            <span className="auth-brand-tag">SPENDING HUB</span>
           </div>
 
           <h1 className="auth-hero-title">
             Take complete control of <br className="hidden-mobile" />
-            <span className="gradient-text">your financial future.</span>
+            <span className="gradient-text">your personal spending.</span>
           </h1>
 
           <p className="auth-hero-desc">
-            Join thousands of users tracking daily expenses, uncovering spending habits, and reaching budgeting goals effortlessly.
+            Track daily expenses, understand spending patterns across categories, and maintain an organized financial record.
           </p>
 
-          {/* Feature Highlights on Open Background */}
+          {/* Feature Highlights on Open Background (Truthful wording) */}
           <div className="auth-feature-list">
             <div className="auth-feature-pill">
               <div className="auth-feature-icon cyan">
                 <TrendingUp size={16} />
               </div>
               <div className="auth-feature-text">
-                <strong>Instant Setup</strong>
-                <span>Get started in under 30 seconds</span>
+                <strong>Spending Trends</strong>
+                <span>Visualise your spending patterns</span>
               </div>
             </div>
 
@@ -85,8 +85,8 @@ function Register({ onRegister, onBackToLogin }) {
                 <PieChart size={16} />
               </div>
               <div className="auth-feature-text">
-                <strong>Visual Analytics</strong>
-                <span>Clear insights into where your money goes</span>
+                <strong>Category Breakdown</strong>
+                <span>Understand where your money goes</span>
               </div>
             </div>
 
@@ -95,19 +95,19 @@ function Register({ onRegister, onBackToLogin }) {
                 <ShieldCheck size={16} />
               </div>
               <div className="auth-feature-text">
-                <strong>Safe & Encrypted</strong>
-                <span>Your financial data stays private</span>
+                <strong>Secure Authentication</strong>
+                <span>User-specific expense data</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Floating Glassmorphic Register Form Card */}
+        {/* Frameless Register Form Area */}
         <div className="auth-form-section">
           <div className="auth-card">
             <div className="auth-card-header">
-              <h2>Create Account</h2>
-              <p>Sign up to start tracking your expenses today.</p>
+              <h2 className="auth-card-heading">Create Account</h2>
+              <p className="auth-form-desc">Sign up to start tracking your expenses today.</p>
             </div>
 
             <form className="auth-form" onSubmit={handleRegister}>
@@ -120,6 +120,8 @@ function Register({ onRegister, onBackToLogin }) {
                   className="auth-input"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  disabled={loading}
                   required
                 />
               </div>
@@ -133,6 +135,8 @@ function Register({ onRegister, onBackToLogin }) {
                   className="auth-input"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  disabled={loading}
                   required
                 />
               </div>
@@ -146,11 +150,17 @@ function Register({ onRegister, onBackToLogin }) {
                   className="auth-input"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  autoComplete="new-password"
+                  disabled={loading}
                   required
                 />
               </div>
 
-              {error && <div className="auth-error">{error}</div>}
+              {error && (
+                <div className="auth-error" role="alert">
+                  {error}
+                </div>
+              )}
 
               <button className="auth-button" type="submit" disabled={loading}>
                 <span>{loading ? "Creating account..." : "Get Started Now"}</span>

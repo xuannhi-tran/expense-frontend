@@ -31,8 +31,8 @@ function Login({ onLogin, onRegister }) {
 
       saveToken(response.data.token);
       onLogin();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       setError("Invalid username or password.");
     } finally {
       setLoading(false);
@@ -47,8 +47,8 @@ function Login({ onLogin, onRegister }) {
       <section className="auth-hero-welcome-stage">
         <div className="welcome-grand-hero-content">
           <div className="welcome-grand-badge">
-            <Sparkles size={20} className="badge-sparkle" />
-            <span>Expense Tracker Experience</span>
+            <Sparkles size={18} className="badge-sparkle" />
+            <span>Expense Tracker</span>
           </div>
 
           <h1 className="welcome-massive-title">Welcome</h1>
@@ -79,10 +79,10 @@ function Login({ onLogin, onRegister }) {
             <div className="auth-brand-badge">
               <div className="auth-brand-logo-glow" />
               <div className="auth-brand-logo">
-                <Sparkles size={22} className="auth-brand-icon" />
+                <Sparkles size={20} className="auth-brand-icon" />
               </div>
               <span className="auth-brand-name">Expense Tracker</span>
-              <span className="auth-brand-tag">Live Hub</span>
+              <span className="auth-brand-tag">SPENDING HUB</span>
             </div>
 
             <h2 className="auth-hero-title">
@@ -91,18 +91,18 @@ function Login({ onLogin, onRegister }) {
             </h2>
 
             <p className="auth-hero-desc">
-              Take command of your wealth with interactive category analytics, live budget curves, and automated spending insights.
+              Take command of your expenses with visual spending patterns, category analytics, and user-specific tracking.
             </p>
 
-            {/* Feature Highlights on Open Background */}
+            {/* Feature Highlights on Open Background (Accurate & Truthful) */}
             <div className="auth-feature-list">
               <div className="auth-feature-pill">
                 <div className="auth-feature-icon cyan">
                   <TrendingUp size={16} />
                 </div>
                 <div className="auth-feature-text">
-                  <strong>Real-time Trends</strong>
-                  <span>Instant visual spending curves</span>
+                  <strong>Spending Trends</strong>
+                  <span>Visualise your spending patterns</span>
                 </div>
               </div>
 
@@ -112,7 +112,7 @@ function Login({ onLogin, onRegister }) {
                 </div>
                 <div className="auth-feature-text">
                   <strong>Category Breakdown</strong>
-                  <span>Interactive donut distribution</span>
+                  <span>Understand where your money goes</span>
                 </div>
               </div>
 
@@ -121,8 +121,8 @@ function Login({ onLogin, onRegister }) {
                   <ShieldCheck size={16} />
                 </div>
                 <div className="auth-feature-text">
-                  <strong>Bank-Grade Privacy</strong>
-                  <span>Encrypted token authentication</span>
+                  <strong>Secure Authentication</strong>
+                  <span>User-specific expense data</span>
                 </div>
               </div>
             </div>
@@ -148,6 +148,8 @@ function Login({ onLogin, onRegister }) {
                     className="auth-input"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    autoComplete="username"
+                    disabled={loading}
                     required
                   />
                 </div>
@@ -161,11 +163,17 @@ function Login({ onLogin, onRegister }) {
                     className="auth-input"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    disabled={loading}
                     required
                   />
                 </div>
 
-                {error && <div className="auth-error">{error}</div>}
+                {error && (
+                  <div className="auth-error" role="alert">
+                    {error}
+                  </div>
+                )}
 
                 <button className="auth-button" type="submit" disabled={loading}>
                   <span>{loading ? "Signing in..." : "Sign In to Dashboard"}</span>

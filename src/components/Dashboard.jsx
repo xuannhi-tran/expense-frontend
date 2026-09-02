@@ -17,6 +17,7 @@ import {
 import api from "../api";
 import ExpenseList from "./ExpenseList";
 import ExpenseDrawer from "./ExpenseDrawer";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 import CategoryDonutChart from "./CategoryDonutChart";
 import SpendingTrendChart from "./SpendingTrendChart";
 import { getCategoryIcon } from "../utils/categories";
@@ -36,6 +37,10 @@ function Dashboard({ onLogout }) {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerExpense, setDrawerExpense] = useState(null); // null = Add mode, object = Edit mode
 
+  // Custom Delete Confirmation Modal state
+  const [deleteModalExpense, setDeleteModalExpense] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Apply theme on change & on mount
   useEffect(() => {
     applyTheme(theme);
@@ -53,7 +58,7 @@ function Dashboard({ onLogout }) {
       // Fetch all expenses for dashboard statistics
       const allResponse = await api.get("/expenses/");
 
-      // Fetch filtered expenses for search results
+      // Fetch filtered expenses for search/category results
       const filteredResponse = await api.get("/expenses/", {
         params: {
           search: search || undefined,
@@ -93,18 +98,34 @@ function Dashboard({ onLogout }) {
     setDrawerExpense(null);
   };
 
-  // Handle Delete
-  const handleDelete = async (expenseId) => {
+  // Trigger custom delete modal
+  const handleRequestDelete = (expense) => {
+    setDeleteModalExpense(expense);
+  };
+
+  // Confirm Delete
+  const handleConfirmDelete = async (expenseId) => {
     try {
+      setIsDeleting(true);
       await api.delete(`/expenses/${expenseId}/`);
+      setDeleteModalExpense(null);
       await fetchExpenses();
     } catch (err) {
       console.error(err);
-      setError("Failed to delete expense.");
+      setError("Failed to delete expense. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  // Dashboard statistics calculations
+  // Cancel Delete
+  const handleCancelDelete = () => {
+    if (!isDeleting) {
+      setDeleteModalExpense(null);
+    }
+  };
+
+  // Dashboard statistics calculations derived from allExpenses
   const totalSpent = allExpenses.reduce(
     (total, expense) => total + Number(expense.amount || 0),
     0
@@ -144,11 +165,10 @@ function Dashboard({ onLogout }) {
           <div className="brand-text-group">
             <div className="brand-title-row">
               <h1 className="brand-title">Expense Tracker</h1>
-              <span className="brand-version-badge">Live Hub</span>
+              <span className="brand-version-badge">SPENDING HUB</span>
             </div>
             <div className="brand-status-indicator">
-              <span className="status-dot-ping" />
-              <span className="brand-subtitle">Real-time Financial & Spending Insights</span>
+              <span className="brand-subtitle">Personal Spending Overview</span>
             </div>
           </div>
         </div>
@@ -169,11 +189,17 @@ function Dashboard({ onLogout }) {
             className="btn-theme-toggle"
             onClick={toggleTheme}
             title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+            aria-label="Toggle visual theme"
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          <button type="button" className="btn-logout" onClick={onLogout}>
+          <button
+            type="button"
+            className="btn-logout"
+            onClick={onLogout}
+            aria-label="Log out of account"
+          >
             <LogOut size={16} />
             <span>Logout</span>
           </button>
@@ -182,14 +208,14 @@ function Dashboard({ onLogout }) {
 
       {/* Global Error Notice */}
       {error && (
-        <div className="form-error-msg" style={{ marginBottom: 24 }}>
+        <div className="form-error-msg" style={{ marginBottom: 24 }} role="alert">
           <AlertCircle size={18} />
           <span>{error}</span>
         </div>
       )}
 
-      {/* 4-Card Overview Stats */}
-      <section className="dashboard-metrics">
+      {/* 4-Card Overview Stats (Truthfully derived from all user expenses) */}
+      <section className="dashboard-metrics" aria-label="Spending Summary Cards">
         <div className="metric-card">
           <div className="metric-icon-box total">
             <Wallet size={24} />
@@ -235,11 +261,9 @@ function Dashboard({ onLogout }) {
       <main className="dashboard-grid">
         {/* Left Column: Charts, Search/Filter & Expense List */}
         <div className="grid-main-content">
-          {/* Spending Trend Analytics Chart */}
+          {/* Spending Trend Analytics Chart (Only shown when data exists) */}
           {allExpenses.length > 0 && (
-            <SpendingTrendChart
-              allExpenses={allExpenses}
-            />
+            <SpendingTrendChart allExpenses={allExpenses} />
           )}
 
           {/* Search & Category Filter */}
@@ -247,18 +271,22 @@ function Dashboard({ onLogout }) {
             <div className="search-input-wrapper">
               <Search size={16} className="search-input-icon" />
               <input
+                id="search-input"
                 type="text"
                 placeholder="Search expenses by title..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                aria-label="Search expenses by title"
               />
             </div>
 
             <div className="filter-select-wrapper">
               <Filter size={15} className="filter-select-icon" />
               <select
+                id="category-select"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
+                aria-label="Filter expenses by category"
               >
                 <option value="">All Categories</option>
                 <option value="Food">Food & Dining</option>
@@ -293,8 +321,14 @@ function Dashboard({ onLogout }) {
               ) : (
                 <ExpenseList
                   expenses={expenses}
+                  allExpensesCount={allExpenses.length}
                   onEdit={handleOpenEditDrawer}
-                  onDelete={handleDelete}
+                  onRequestDelete={handleRequestDelete}
+                  onOpenAdd={handleOpenAddDrawer}
+                  onClearFilters={() => {
+                    setSearch("");
+                    setCategory("");
+                  }}
                 />
               )}
             </div>
@@ -310,7 +344,7 @@ function Dashboard({ onLogout }) {
               <span>Quick Actions</span>
             </h3>
             <p style={{ margin: "0 0 16px", fontSize: 13, opacity: 0.85, lineHeight: 1.4 }}>
-              Track a new purchase or update your spending log in seconds.
+              Record a new purchase or update your spending log in seconds.
             </p>
             <button
               type="button"
@@ -387,7 +421,7 @@ function Dashboard({ onLogout }) {
         </aside>
       </main>
 
-      {/* Unified Add / Edit Expense Slide-Over Drawer */}
+      {/* Unified Add / Edit Expense Slide-Over Modal */}
       <ExpenseDrawer
         isOpen={isDrawerOpen}
         expense={drawerExpense}
@@ -395,6 +429,15 @@ function Dashboard({ onLogout }) {
         onSuccess={async () => {
           await fetchExpenses();
         }}
+      />
+
+      {/* Custom Destructive Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteModalExpense)}
+        expense={deleteModalExpense}
+        isDeleting={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
       />
     </div>
   );

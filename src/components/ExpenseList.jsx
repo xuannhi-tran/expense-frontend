@@ -1,6 +1,68 @@
 import { Pencil, Trash2, ReceiptText, SearchX, Plus, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryIcon } from "../utils/categories";
 
+function formatTransactionTimestamp(timestamp) {
+  if (!timestamp) return "";
+  const dateObj = new Date(timestamp);
+  if (isNaN(dateObj.getTime())) return "";
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(dateObj);
+}
+
+function formatFullTimestamp(timestamp) {
+  if (!timestamp) return "";
+  const dateObj = new Date(timestamp);
+  if (isNaN(dateObj.getTime())) return "";
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(dateObj);
+}
+
+function getExpenseTimestampMeta(expense) {
+  if (!expense || !expense.created_at) return null;
+
+  const createdDate = new Date(expense.created_at);
+  if (isNaN(createdDate.getTime())) return null;
+
+  const createdFormatted = formatTransactionTimestamp(expense.created_at);
+  let wasUpdated = false;
+  let updatedFormatted = "";
+
+  if (expense.updated_at) {
+    const updatedDate = new Date(expense.updated_at);
+    if (!isNaN(updatedDate.getTime())) {
+      // Meaningfully edited if difference is greater than 1000ms
+      wasUpdated = updatedDate.getTime() - createdDate.getTime() > 1000;
+      if (wasUpdated) {
+        updatedFormatted = formatTransactionTimestamp(expense.updated_at);
+      }
+    }
+  }
+
+  let displayText = `Created ${createdFormatted}`;
+  if (wasUpdated && updatedFormatted) {
+    displayText = `Created ${createdFormatted} · Updated ${updatedFormatted}`;
+  }
+
+  let fullTooltip = `Created: ${formatFullTimestamp(expense.created_at)}`;
+  if (wasUpdated && expense.updated_at) {
+    fullTooltip += `\nUpdated: ${formatFullTimestamp(expense.updated_at)}`;
+  }
+
+  return { displayText, fullTooltip };
+}
+
 function ExpenseList({
   expenses,
   allExpensesCount = 0,
@@ -74,6 +136,7 @@ function ExpenseList({
       <div className="expense-list">
         {expenses.map((expense) => {
           const catClass = `cat-${expense.category || "Other"}`;
+          const timeMeta = getExpenseTimestampMeta(expense);
 
           return (
             <div className="expense-card" key={expense.id}>
@@ -83,9 +146,19 @@ function ExpenseList({
                 </div>
                 <div className="expense-info">
                   <h4 className="expense-name">{expense.name}</h4>
-                  <span className={`expense-cat-badge ${catClass}`}>
-                    {expense.category}
-                  </span>
+                  <div className="expense-meta-row">
+                    <span className={`expense-cat-badge ${catClass}`}>
+                      {expense.category}
+                    </span>
+                    {timeMeta && (
+                      <span
+                        className="expense-timestamp"
+                        title={timeMeta.fullTooltip}
+                      >
+                        {timeMeta.displayText}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 

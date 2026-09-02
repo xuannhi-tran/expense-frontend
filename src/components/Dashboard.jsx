@@ -1,30 +1,51 @@
-import { useEffect, useState } from "react";
-
+import { useEffect, useState, useCallback } from "react";
+import {
+  Wallet,
+  Receipt,
+  TrendingUp,
+  Calculator,
+  Search,
+  Filter,
+  Plus,
+  PieChart,
+  LogOut,
+  AlertCircle,
+  Sparkles,
+  Sun,
+  Moon,
+} from "lucide-react";
 import api from "../api";
-
 import ExpenseList from "./ExpenseList";
-
-import ExpenseForm from "./ExpenseForm";
-
-import EditExpenseForm from "./EditExpenseForm";
-
+import ExpenseDrawer from "./ExpenseDrawer";
+import CategoryDonutChart from "./CategoryDonutChart";
+import SpendingTrendChart from "./SpendingTrendChart";
+import { getCategoryIcon } from "../utils/categories";
+import { getInitialTheme, applyTheme } from "../utils/theme";
 import "../styles/dashboard.css";
 
 function Dashboard({ onLogout }) {
+  const [theme, setTheme] = useState(getInitialTheme);
   const [allExpenses, setAllExpenses] = useState([]);
   const [expenses, setExpenses] = useState([]);
-
   const [error, setError] = useState("");
-
   const [loading, setLoading] = useState(true);
-
   const [search, setSearch] = useState("");
-
   const [category, setCategory] = useState("");
 
-  const [editingExpense, setEditingExpense] = useState(null);
+  // Unified Drawer state for Add & Edit
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerExpense, setDrawerExpense] = useState(null); // null = Add mode, object = Edit mode
 
-  const fetchExpenses = async () => {
+  // Apply theme on change & on mount
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
+  };
+
+  const fetchExpenses = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -40,181 +61,332 @@ function Dashboard({ onLogout }) {
         },
       });
 
-      setAllExpenses(allResponse.data.results);
-      setExpenses(filteredResponse.data.results);
-    } catch (error) {
-      console.error(error);
-      setError("Failed to load expenses.");
+      setAllExpenses(allResponse.data.results || allResponse.data || []);
+      setExpenses(filteredResponse.data.results || filteredResponse.data || []);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load expenses. Please check your connection.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, category]);
 
   useEffect(() => {
     fetchExpenses();
-  }, [search, category]);
+  }, [fetchExpenses]);
+
+  // Open Drawer in Add mode
+  const handleOpenAddDrawer = () => {
+    setDrawerExpense(null);
+    setIsDrawerOpen(true);
+  };
+
+  // Open Drawer in Edit mode
+  const handleOpenEditDrawer = (expense) => {
+    setDrawerExpense(expense);
+    setIsDrawerOpen(true);
+  };
+
+  // Close Drawer
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setDrawerExpense(null);
+  };
 
   // Handle Delete
   const handleDelete = async (expenseId) => {
     try {
       await api.delete(`/expenses/${expenseId}/`);
-
       await fetchExpenses();
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       setError("Failed to delete expense.");
     }
   };
 
-  // Dashboard statistics use ALL expenses,
-  // not the filtered search results.
+  // Dashboard statistics calculations
   const totalSpent = allExpenses.reduce(
-    (total, expense) => total + Number(expense.amount),
+    (total, expense) => total + Number(expense.amount || 0),
     0
   );
 
+  const expenseCount = allExpenses.length;
+
   const categoryTotals = allExpenses.reduce((totals, expense) => {
-    const expenseCategory = expense.category;
-    const amount = Number(expense.amount);
-
+    const expenseCategory = expense.category || "Other";
+    const amount = Number(expense.amount || 0);
     totals[expenseCategory] = (totals[expenseCategory] || 0) + amount;
-
     return totals;
   }, {});
 
-  const expenseCount = allExpenses.length;
+  // Find Top Category
+  const topCategoryEntry = Object.entries(categoryTotals).reduce(
+    (max, curr) => (curr[1] > (max[1] || 0) ? curr : max),
+    ["None", 0]
+  );
+  const topCategory = topCategoryEntry[0];
 
-  const isFiltering = search || category;
+  const averageExpense = expenseCount > 0 ? totalSpent / expenseCount : 0;
+
+  const isFiltering = Boolean(search || category);
 
   return (
     <div className="dashboard">
+      {/* Header */}
       <header className="dashboard-header">
-        <h1>Expense Tracker</h1>
+        <div className="brand-section">
+          <div className="brand-logo">
+            <Wallet size={22} />
+          </div>
+          <div>
+            <h1 className="brand-title">Expense Tracker</h1>
+            <p className="brand-subtitle">Smart financial management</p>
+          </div>
+        </div>
 
-        <button onClick={onLogout}>Logout</button>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="btn-header-add"
+            onClick={handleOpenAddDrawer}
+          >
+            <Plus size={17} />
+            <span>New Expense</span>
+          </button>
+
+          {/* Dark / Light Mode Toggle Button */}
+          <button
+            type="button"
+            className="btn-theme-toggle"
+            onClick={toggleTheme}
+            title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          <button type="button" className="btn-logout" onClick={onLogout}>
+            <LogOut size={16} />
+            <span>Logout</span>
+          </button>
+        </div>
       </header>
 
-      <main>
-        <h2>My Expenses</h2>
+      {/* Global Error Notice */}
+      {error && (
+        <div className="form-error-msg" style={{ marginBottom: 24 }}>
+          <AlertCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
 
-        {/* Summary */}
-        <div className="dashboard-summary">
-          <div className="summary-card">
-            <h3>Total Spent</h3>
-
-            <p>${totalSpent.toFixed(2)}</p>
+      {/* 4-Card Overview Stats */}
+      <section className="dashboard-metrics">
+        <div className="metric-card">
+          <div className="metric-icon-box total">
+            <Wallet size={24} />
           </div>
-
-          <div className="summary-card">
-            <h3>Total Expenses</h3>
-
-            <p>{expenseCount}</p>
+          <div className="metric-content">
+            <span className="metric-label">Total Spent</span>
+            <span className="metric-value">${totalSpent.toFixed(2)}</span>
           </div>
         </div>
 
-        {/* Spending by Category */}
-        <div className="dashboard-section">
-          <h3>Spending by Category</h3>
-
-          <div className="category-list">
-            {Object.entries(categoryTotals).map(([expenseCategory, total]) => {
-              const percentage =
-                totalSpent > 0 ? (total / totalSpent) * 100 : 0;
-
-              return (
-                <div className="category-item" key={expenseCategory}>
-                  <div className="category-header">
-                    <span>{expenseCategory}</span>
-
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-
-                  <div className="category-bar">
-                    <div
-                      className="category-bar-fill"
-                      style={{
-                        width: `${percentage}%`,
-                      }}
-                    />
-                  </div>
-
-                  <span className="category-percentage">
-                    {percentage.toFixed(0)}%
-                  </span>
-                </div>
-              );
-            })}
+        <div className="metric-card">
+          <div className="metric-icon-box count">
+            <Receipt size={24} />
+          </div>
+          <div className="metric-content">
+            <span className="metric-label">Transactions</span>
+            <span className="metric-value">{expenseCount}</span>
           </div>
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="state-message error-state">
-            <p>{error}</p>
+        <div className="metric-card">
+          <div className="metric-icon-box top">
+            <TrendingUp size={24} />
           </div>
-        )}
-
-        {/* Search + Category Filter */}
-        <div className="dashboard-filters">
-          <input
-            type="text"
-            placeholder="Search expenses..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            <option value="">All Categories</option>
-            <option value="Food">Food</option>
-            <option value="Transport">Transport</option>
-            <option value="Other">Other</option>
-          </select>
+          <div className="metric-content">
+            <span className="metric-label">Top Category</span>
+            <span className="metric-value">{topCategory}</span>
+          </div>
         </div>
 
-        {/* Expense Results */}
-        <div className="dashboard-section">
-          <h3>{isFiltering ? "Search Results" : "Recent Expenses"}</h3>
+        <div className="metric-card">
+          <div className="metric-icon-box avg">
+            <Calculator size={24} />
+          </div>
+          <div className="metric-content">
+            <span className="metric-label">Average Cost</span>
+            <span className="metric-value">${averageExpense.toFixed(2)}</span>
+          </div>
+        </div>
+      </section>
 
-          {loading ? (
-            <div className="state-message">
-              <p>Loading expenses...</p>
-            </div>
-          ) : (
-            <ExpenseList
-              expenses={expenses}
-              onEdit={setEditingExpense}
-              onDelete={handleDelete}
+      {/* 2-Column Responsive Main Grid */}
+      <main className="dashboard-grid">
+        {/* Left Column: Charts, Search/Filter & Expense List */}
+        <div className="grid-main-content">
+          {/* Spending Trend Analytics Chart */}
+          {allExpenses.length > 0 && (
+            <SpendingTrendChart
+              allExpenses={allExpenses}
             />
           )}
-        </div>
 
-        {/* Edit Expense */}
-        {editingExpense && (
-          <div className="dashboard-section">
-            <EditExpenseForm
-              expense={editingExpense}
-              onExpenseUpdated={async () => {
-                setEditingExpense(null);
+          {/* Search & Category Filter */}
+          <div className="search-filter-card">
+            <div className="search-input-wrapper">
+              <Search size={16} className="search-input-icon" />
+              <input
+                type="text"
+                placeholder="Search expenses by title..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
 
-                await fetchExpenses();
-              }}
-              onCancel={() => setEditingExpense(null)}
-            />
+            <div className="filter-select-wrapper">
+              <Filter size={15} className="filter-select-icon" />
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                <option value="">All Categories</option>
+                <option value="Food">Food & Dining</option>
+                <option value="Transport">Transportation</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Utilities">Utilities & Bills</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
           </div>
-        )}
 
-        {/* Add Expense */}
-        <div className="dashboard-section">
-          <ExpenseForm
-            onExpenseAdded={async () => {
-              await fetchExpenses();
-            }}
-          />
+          {/* Transaction History Card */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-header-title">
+                <Receipt size={18} />
+                <span>{isFiltering ? "Filtered Expenses" : "Recent Transactions"}</span>
+              </h2>
+              <span className="card-badge">
+                {expenses.length} {expenses.length === 1 ? "entry" : "entries"}
+              </span>
+            </div>
+
+            <div className="card-body">
+              {loading ? (
+                <div className="loading-skeleton">
+                  <div className="skeleton-item" />
+                  <div className="skeleton-item" />
+                  <div className="skeleton-item" />
+                </div>
+              ) : (
+                <ExpenseList
+                  expenses={expenses}
+                  onEdit={handleOpenEditDrawer}
+                  onDelete={handleDelete}
+                />
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Right Column: Quick Action Banner & Category Breakdown */}
+        <aside className="grid-sidebar">
+          {/* Quick Action / Summary Banner */}
+          <div className="sidebar-summary-card">
+            <h3 className="sidebar-summary-title">
+              <Sparkles size={18} />
+              <span>Quick Actions</span>
+            </h3>
+            <p style={{ margin: "0 0 16px", fontSize: 13, opacity: 0.85, lineHeight: 1.4 }}>
+              Track a new purchase or update your spending log in seconds.
+            </p>
+            <button
+              type="button"
+              className="sidebar-summary-btn"
+              onClick={handleOpenAddDrawer}
+            >
+              <Plus size={17} />
+              <span>Add New Expense</span>
+            </button>
+          </div>
+
+          {/* Spending by Category Card (with Donut Chart) */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-header-title">
+                <PieChart size={18} />
+                <span>Category Breakdown</span>
+              </h2>
+            </div>
+            <div className="card-body">
+              {Object.keys(categoryTotals).length === 0 ? (
+                <div className="empty-state-box" style={{ padding: "24px 16px" }}>
+                  <p className="empty-state-desc">No category data yet.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Interactive Donut Chart */}
+                  <CategoryDonutChart
+                    categoryTotals={categoryTotals}
+                    totalSpent={totalSpent}
+                  />
+
+                  {/* Category Progress Bars */}
+                  <div className="category-breakdown-list" style={{ marginTop: 18 }}>
+                    {Object.entries(categoryTotals).map(([catName, total]) => {
+                      const percentage = totalSpent > 0 ? (total / totalSpent) * 100 : 0;
+                      const catClass = `cat-${catName}`;
+                      const barClass = `cat-bar-${catName}`;
+
+                      return (
+                        <div className="category-breakdown-item" key={catName}>
+                          <div className="category-breakdown-header">
+                            <span className="category-breakdown-label">
+                              <span className={`category-icon-sm ${catClass}`}>
+                                {getCategoryIcon(catName, 14)}
+                              </span>
+                              {catName}
+                            </span>
+                            <span className="category-breakdown-amount">
+                              ${total.toFixed(2)}
+                            </span>
+                          </div>
+
+                          <div className="category-bar-bg">
+                            <div
+                              className={`category-bar-progress ${barClass}`}
+                              style={{ width: `${Math.min(percentage, 100)}%` }}
+                            />
+                          </div>
+
+                          <div className="category-breakdown-footer">
+                            <span className="category-percentage-text">
+                              {percentage.toFixed(1)}% of total
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </aside>
       </main>
+
+      {/* Unified Add / Edit Expense Slide-Over Drawer */}
+      <ExpenseDrawer
+        isOpen={isDrawerOpen}
+        expense={drawerExpense}
+        onClose={handleCloseDrawer}
+        onSuccess={async () => {
+          await fetchExpenses();
+        }}
+      />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import api from "../api";
 import { saveToken } from "../auth";
 import "../styles/auth.css";
 
-function Login({ onLogin, onRegister }) {
+function Login({ onLogin, onRegister, onDemo }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -187,6 +187,14 @@ function Login({ onLogin, onRegister }) {
                   Create an account
                 </button>
               </div>
+              {onDemo && (
+                <div className="auth-switch">
+                  <span>Just looking around?</span>
+                  <button type="button" className="auth-link" onClick={onDemo}>
+                    Try demo
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
